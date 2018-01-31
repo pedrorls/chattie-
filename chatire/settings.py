@@ -39,7 +39,7 @@ DJANGO_APPS = (
 )
 
 LOCAL_APPS = (
-
+    'chat',
 )
 
 THIRD_PARTY_APPS = (
