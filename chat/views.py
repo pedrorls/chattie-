@@ -16,7 +16,7 @@ class ChatSessionView(APIView):
         '''create a new chat session.'''
         user = request.user
         chat_session = ChatSession.objects.create(owner=user)
-        return Respose({
+        return Response({
             'status': 'SUCCESS', 'uri': chat_session.uri,
             'message': 'New chat session created'
         })
@@ -73,6 +73,6 @@ class ChatSessionMessageView(APIView):
             user=user, chat_session=chat_session, message=message
         )
         return Response({
-            'status': 'SUCCESS'. 'uri': chat_session.uri, 'message': message,
+            'status': 'SUCCESS', 'uri': chat_session.uri, 'message': message,
             'user': deserialize_user(user)
         })
