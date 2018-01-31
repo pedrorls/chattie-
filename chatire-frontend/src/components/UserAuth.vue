@@ -1,3 +1,4 @@
+/* eslint-disable */ 
 <template>
   <div class="container">
     <h1 class="text-center">Welcome to Chatire!</h1>
@@ -83,8 +84,8 @@
         const credentials = {username: this.username, password: this.password}
 
         $.post('http://localhost:8000/auth/token/create/', credentials, (data) => {
-          localStorage.setItem('authToken', data.auth_token)
-          localStorage.setItem('username', this.username)
+          sessionStorage.setItem('authToken', data.auth_token)
+          sessionStorage.setItem('username', this.username)
           this.$router.push('/chats')
         })
         .fail((response) => {
@@ -93,7 +94,7 @@
       },
 
       logOut() {
-        localStorage.removeItem('authToken')
+        sessionStorage.removeItem('authToken')
       }
     }
 
@@ -109,7 +110,3 @@
     padding-top: 20px;
   }
 </style>
-
-methods: {
-
-}

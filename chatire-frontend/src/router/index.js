@@ -1,14 +1,14 @@
 import Vue from 'vue';
 import Router from 'vue-router';
-import Chat from '@/components/Chat.vue';
-import UserAuth from '@/components/UserAuth.vue';
+import Chat from '@/components/Chat';
+import UserAuth from '@/components/UserAuth';
 
 Vue.use(Router);
 
 const router = new Router({
   routes: [
     {
-      path: '/chats',
+      path: '/chats/:uri?',
       name: 'Chat',
       component: Chat,
     },
