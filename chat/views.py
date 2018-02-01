@@ -56,7 +56,7 @@ class ChatSessionMessageView(APIView):
         chat_session = ChatSession.objects.get(uri=uri)
         messages = [
             chat_session_message.to_json()
-            for chat_session_message in chat_session.message.all()
+            for chat_session_message in chat_session.messages.all()
         ]
         return Response({
             'id': chat_session.id, 'uri': chat_session.uri,

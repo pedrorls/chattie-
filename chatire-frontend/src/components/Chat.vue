@@ -1,8 +1,7 @@
-/* eslint-disable */ 
 <template>
   <div class="container">
     <div class="row">
-      <div class="col-sm-6 offset-3">
+      <div class="col-sm-9 offset-2">
 
         <div v-if="sessionStarted" id="chat-container" class="card">
           <div class="card-header text-white text-center font-weight-bold subtle-blue-gradient">
@@ -11,66 +10,39 @@
 
           <div class="card-body">
             <div class="container chat-body">
-              <div class="row chat-section">
-                <div class="col-sm-2">
-                  <img class="rounded-circle" src="http://placehold.it/40/f16000/fff&text=D" />
-                </div>
-                <div class="col-sm-7">
-                  <span class="card-text speech-bubble speech-bubble-peer">Hello!</span>
-                </div>
-              </div>
-              <div class="row chat-section">
-                <div class="col-sm-7 offset-3">
-                  <span class="card-text speech-bubble speech-bubble-user float-right text-white subtle-blue-gradient">
-                    Whatsup, another chat app?
-                  </span>
-                </div>
-                <div class="col-sm-2">
-                  <img class="rounded-circle" src="http://placehold.it/40/333333/fff&text=A" />
-                </div>
-              </div>
-              <div class="row chat-section">
-                <div class="col-sm-2">
-                  <img class="rounded-circle" src="http://placehold.it/40/f16000/fff&text=D" />
-                </div>
-                <div class="col-sm-7">
-                  <p class="card-text speech-bubble speech-bubble-peer">
-                    Yes this is Chatire, it's pretty cool and it's Open source
-                    and it was built with Django and Vue JS so we can tweak it to our satisfaction.
-                  </p>
-                </div>
-              </div>
-              <div class="row chat-section">
-                <div class="col-sm-7 offset-3">
-                  <p class="card-text speech-bubble speech-bubble-user float-right text-white subtle-blue-gradient">
-                    Okay i'm already hacking around let me see what i can do to this thing.
-                  </p>
-                </div>
-                <div class="col-sm-2">
-                  <img class="rounded-circle" src="http://placehold.it/40/333333/fff&text=A" />
-                </div>
-              </div>
-              <div class="row chat-section">
-                <div class="col-sm-7 offset-3">
-                  <p class="card-text speech-bubble speech-bubble-user float-right text-white subtle-blue-gradient">
-                    We should invite james to see this.
-                  </p>
-                </div>
-                <div class="col-sm-2">
-                  <img class="rounded-circle" src="http://placehold.it/40/333333/fff&text=A" />
-                </div>
+              <div v-for="message in messages" :key="message.id" class="row chat-section">
+                <template v-if="username === message.user.username">
+                  <div class="col-sm-7 offset-3">
+                    <span class="card-text speech-bubble speech-bubble-user float-right text-white subtle-blue-gradient">
+                      {{ message.message }}
+                    </span>
+                  </div>
+                  <div class="col-sm-2">
+                    <img class="rounded-circle" :src="`http://placehold.it/40/007bff/fff&text=${message.user.username[0].toUpperCase()}`" />
+                  </div>
+                </template>
+                <template v-else>
+                  <div class="col-sm-2">
+                    <img class="rounded-circle" :src="`http://placehold.it/40/333333/fff&text=${message.user.username[0].toUpperCase()}`" />
+                  </div>
+                  <div class="col-sm-8">
+                    <span class="card-text speech-bubble speech-bubble-peer float-left">
+                      {{ message.message }}
+                    </span>
+                  </div>
+                </template>
               </div>
             </div>
           </div>
 
           <div class="card-footer text-muted">
-            <form>
+            <form @submit.prevent="postMessage">
               <div class="row">
                 <div class="col-sm-10">
-                  <input type="text" placeholder="Type a message" />
+                  <input v-model="message" type="text" placeholder="Type a message" />
                 </div>
                 <div class="col-sm-2">
-                  <button class="btn btn-primary">Send</button>
+                  <button class="btn btn-outline-primary">Send</button>
                 </div>
               </div>
             </form>
@@ -79,42 +51,94 @@
 
         <div v-else>
           <h3 class="text-center">Welcome !</h3>
-
           <br />
-
           <p class="text-center">
             To start chatting with friends click on the button below, it'll start a new chat session
             and then you can invite your friends over to chat!
           </p>
-
           <br />
-
           <button @click="startChatSession" class="btn btn-primary btn-lg btn-block">Start Chatting</button>
         </div>
-
       </div>
     </div>
   </div>
 </template>
 
 <script>
-  const $ = window.Jquery
-  export default {
-    data(){
-      return {
-        sessionStarted: false
+
+const $ = window.jQuery
+
+export default {
+  data () {
+    return {
+      sessionStarted: false,
+      messages: [],
+      message: ''
+    }
+  },
+
+  created () {
+    this.username = sessionStorage.getItem('username')
+
+    // Setup headers for all requests
+    $.ajaxSetup({
+      headers: {
+        'Authorization': `Token ${sessionStorage.getItem('authToken')}`
       }
-    },
-    created(){
-      this.username = sessionStorage.getItem('username')
-    },
-    methods: {
-      startChatSession(){
+    })
+
+    if(this.$route.params.uri) {
+      this.joinChatSession()
+    }
+
+    setInterval(this.fetchChatSessionHistory, 3000)
+  },
+
+  methods: {
+    startChatSession () {
+      $.post('http://localhost:8000/api/chats/', (data) => {
+        alert("A new session has been created you'll be redirected automatically")
         this.sessionStarted = true
-        this.$router.push('/chats/chat_url/')
-      }
+        this.$router.push(`/chats/${data.uri}/`)
+      })
+      .fail((response) => {
+        alert(response.responseText)
+      })
+    },
+    postMessage (event) {
+      const data = {message: this.message}
+
+      $.post(`http://localhost:8000/api/chats/${this.$route.params.uri}/messages`, data, (data) => {
+        this.messages.push(data)
+        this.message = '' // clear the message after sending
+      })
+      .fail((response) => {
+        alert(response.responseText)
+      })
+    },
+    joinChatSession(){
+      const uri = this.$route.params.uri
+      $.ajax({
+        url: `http://localhost:8000/api/chats/${uri}/`,
+        data: {username: this.username},
+        type: 'PATCH',
+        success: (date) => {
+          const user = data.members.find((member) => member.username === this.username)
+
+          if(user) {
+            this.sessionStarted = true
+            this.fetchChatSessionHistory()
+          }
+        }
+      })
+    },
+    fetchChatSessionHistory(){
+      $.get(`http://127.0.0.1:8000/api/chats/${this.$route.params.uri}/messages`, (data) => {
+        this.messages = data.messages
+      })
     }
   }
+}
 </script>
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
