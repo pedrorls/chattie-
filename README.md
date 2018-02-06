@@ -4,7 +4,9 @@
 
 ## Django Setup
 ```
-Clone repository
+# clone repository
+git clone https://github.com/pedrorls/chattie-.git
+
 # chage directory
 cd chattie
 
