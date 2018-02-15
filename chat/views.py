@@ -7,6 +7,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import permissions
 
+from notifications.signals import notify
 
 class ChatSessionView(APIView):
     '''Manage chat sessions.'''
@@ -64,15 +65,30 @@ class ChatSessionMessageView(APIView):
         })
 
     def post(self, request, *args, **kwargs):
-        '''create a new message in a chat session.'''
+        """create a new message in a chat session."""
         uri = kwargs['uri']
         message = request.data['message']
+
         user = request.user
         chat_session = ChatSession.objects.get(uri=uri)
-        ChatSessionMessage.objects.create(
+
+        chat_session_message = ChatSessionMessage.objects.create(
             user=user, chat_session=chat_session, message=message
         )
-        return Response({
+
+        notif_args = {
+            'source': user,
+            'source_display_name': user.get_full_name(),
+            'category': 'chat', 'action': 'Sent',
+            'obj': chat_session_message.id,
+            'short_description': 'You a new message', 'silent': True,
+            'extra_data': {'uri': chat_session.uri, 'message': message}
+        }
+        notify.send(
+            sender=self.__class__, **notif_args, channels=['websocket']
+        )
+
+        return Response ({
             'status': 'SUCCESS', 'uri': chat_session.uri, 'message': message,
             'user': deserialize_user(user)
         })

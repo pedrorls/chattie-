@@ -47,6 +47,7 @@ THIRD_PARTY_APPS = (
     'rest_framework.authtoken',
     'corsheaders',
     'djoser',
+    'notifications',
 )
 
 INSTALLED_APPS = DJANGO_APPS + LOCAL_APPS + THIRD_PARTY_APPS
@@ -140,3 +141,11 @@ REST_FRAMEWORK = {
 }
 
 CORS_ORIGIN_ALLOW_ALL = True
+
+# Celery settings
+CELERY_TASK_ALWAYS_EAGER = True
+
+# notifications settings
+NOTIFICATIONS_CHANNELS = {
+   'websocket': 'chat.channels.BroadCastWebSocketChannel'
+}
